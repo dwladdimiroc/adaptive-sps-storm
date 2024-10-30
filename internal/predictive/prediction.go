@@ -171,7 +171,7 @@ func DeterminatePredictor(topology *storm.Topology) {
 		} else if selectorModel == "bandit-ucb" {
 			value := rand.Float64()
 			if viper.GetString("storm.deploy.dataset") == "sbac" {
-				// GREEDY - TWITTER
+				// UCB - TWITTER
 				if 0.0 < value && value <= 0.687 {
 					indexChosenPredictor = 4 //ANN
 				} else if 0.687 < value && value <= 0.932 {
@@ -194,7 +194,7 @@ func DeterminatePredictor(topology *storm.Topology) {
 			log.Printf("[t=X] selector_model={%s},prediction_model={%s},rand_value={%.3f}", selectorModel, predictions[indexChosenPredictor].NameModel, value)
 		} else if selectorModel == "bandit-greedy-avg" {
 			value := rand.Float64()
-			// GREEDY - TWITTER
+			// GREEDY - AVG
 			if 0.0 < value && value <= 0.651 {
 				indexChosenPredictor = 4 //ANN
 			} else if 0.651 < value && value <= 0.79 {
@@ -205,7 +205,7 @@ func DeterminatePredictor(topology *storm.Topology) {
 			log.Printf("[t=X] selector_model={%s},prediction_model={%s},rand_value={%.3f}", selectorModel, predictions[indexChosenPredictor].NameModel, value)
 		} else if selectorModel == "bandit-ucb-avg" {
 			value := rand.Float64()
-			// GREEDY - TWITTER
+			// UCB - AVG
 			if 0.0 < value && value <= 0.276 {
 				indexChosenPredictor = 4 //ANN
 			} else if 0.276 < value && value <= 0.709 {
