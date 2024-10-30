@@ -21,9 +21,10 @@ storm:
     time_window_size: 1
     benchmark_samples: 60
     analyze_samples: 15
-    predictive_model: multi
+    predictive_model: "multi"
     prediction_samples: 30
     prediction_number: 15
+    selector_model: "bandit-ucb"
     planning_samples: 5
     limit_replicas: 25
   rest_metric:

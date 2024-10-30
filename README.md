@@ -24,6 +24,8 @@ The variable `adaptive` is related to self-adaptive system.
 - `preditive_model` model used by input prediction. it's possible variables: `basic`, `linear_regression`, `fft`, `ann`, `random_forest`, `svg`, `svm`, `ridge`, `bayesian`, `multi`
 - `prediction_samples`  number of samples used by predictive model
 - `prediction_number`  number of predictions made by predictive model
+- `selector_model`: model used by selection. `rmse`, `bandit-greedy`, `bandit-ucb`.
+- `planning_samples`: numbers of samples used by planning
 - `limit_repicas`  limit of number of pool replicas
 
 The variable `csv` is the folder where the system saves the statistics.
