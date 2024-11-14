@@ -123,8 +123,11 @@ func GetPredictionInput(topology *storm.Topology, indexPredictor int, wg *sync.W
 	}
 }
 
+//TODO Refactor this function
+
 func DeterminatePredictor(topology *storm.Topology) {
 	if len(predictions) == 1 {
+		log.Printf("Not used selector model")
 		indexChosenPredictor = 0
 	} else {
 		var selectorModel = viper.GetString("storm.adaptive.selector_model")
