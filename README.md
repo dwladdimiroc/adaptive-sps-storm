@@ -1,5 +1,5 @@
 # Self-adaptive in Apache Storm
-Implementation of MAPE Model for Storm extension in Serverless. This project presents the self-adaptive system for to modify the number of active/inactive replicas for each pool of operators in the SPS application. The goal is to analyse differences metrics (i.e. input, executed time, queue) and to plan the changes necessary for to process all input events in the SPS.   
+Implementation of MAPE Model for Storm extension. This project presents the self-adaptive system for to modify the number of active/inactive replicas for each pool of operators in the SPS application. The goal is to analyse differences metrics (i.e. input, executed time, queue) and to plan the changes necessary for to process all input events in the SPS.   
 
 ## Configuration
 The config file '[config.yaml](configs/config.yaml)' has three principals parameters: `nimbus`, `redis`, `storm`. 
