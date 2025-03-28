@@ -25,11 +25,6 @@ func analyze(topology *storm.Topology) {
 			topology.Bolts[i].PredictionQueue = predictionInputQueue(topology.Bolts[i], *topology) / viper.GetInt64("storm.adaptive.analyze_samples")
 		}
 
-		//log.Printf("[t=%d] analyze: determinate predictor={%d}\n]", period, period%(viper.GetInt("storm.adaptive.analyze_samples")+viper.GetInt("storm.adaptive.prediction_number")))
-		if period%(viper.GetInt("storm.adaptive.analyze_samples")+viper.GetInt("storm.adaptive.prediction_number")) == 0 {
-			predictive.DeterminatePredictor(topology)
-		}
-
 		topology.ClearQueue()
 
 		//log.Printf("[t=%d] analyze: predictedModel={%s},predictedInput={%d},topologyInput={%d}", period, predictive.GetPred().NameModel, len(predictive.GetPred().PredictedInput), len(topology.PredictedInputRate))
