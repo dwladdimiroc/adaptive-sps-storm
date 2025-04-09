@@ -1,5 +1,5 @@
 # Self-adaptive in Apache Storm
-Implementation of MAPE Model for Storm extension in Serverless. This project presents the self-adaptive system for to modify the number of active/inactive replicas for each pool of operators in the SPS application. The goal is to analyse differences metrics (i.e. input, executed time, queue) and to plan the changes necessary for to process all input events in the SPS.   
+Implementation of MAPE Model for Storm extension in the article [[1]](#1). This project presents the self-adaptive system for to modify the number of active/inactive replicas for each pool of operators in the SPS application. The goal is to analyse differences metrics (i.e. input, executed time, queue) and to plan the changes necessary for to process all input events in the SPS.
 
 ## Configuration
 The config file '[config.yaml](configs/config.yaml)' has three principals parameters: `nimbus`, `redis`, `storm`. 
@@ -21,11 +21,9 @@ The variable `adaptive` is related to self-adaptive system.
 - `time_window_size` size of the time period where a sample is obtained. Its value is in seconds.
 - `benchmark_samples` numbers of samples used by the benchmark.
 - `analyze_samples` numbers of samples by MAPE model.
-- `preditive_model` model used by input prediction. it's possible variables: `basic`, `linear_regression`, `fft`, `ann`, `random_forest`, `svg`, `svm`, `ridge`, `bayesian`, `multi`
+- `preditive_model` model used by input prediction. it's possible variables: `basic`, `linear_regression`, `fft`, `ann`, `random_forest`, `svg`, `svm`, `ridge`, `bayesian`
 - `prediction_samples`  number of samples used by predictive model
 - `prediction_number`  number of predictions made by predictive model
-- `selector_model`: model used by selection. `rmse`, `bandit-greedy`, `bandit-ucb`.
-- `planning_samples`: numbers of samples used by planning
 - `limit_repicas`  limit of number of pool replicas
 
 The variable `csv` is the folder where the system saves the statistics.
@@ -38,3 +36,8 @@ The `go` last version used was 1.2.1  (see the <a href="https://go.dev/doc/insta
 ## Deploy
 Before starting the application, it is necessary to deploy `storm`, run `redis` and the REST app (Flask) from the `py` folder.
 The main file is `initSps.sh` which is responsible for run the monitor. If the machine has no Golang installed, so you should comment line 4 `go build`, because this linea compile again the Go project. It's mandatory create the `\stats` folder in the project. And the `scripts` folder has Storm applications that the system can use. Each script is the commands for deploy Storm app, so you must change the Storm directory is necessary.
+
+## References
+<a id="1" href="https://www.sciencedirect.com/science/article/pii/S0743731524001047">[1]</a>
+Daniel Wladdimiro, Luciana Arantes, Nicolas Hidalgo, Pierre Sens. PA-SPS: A predictive adaptive approach for an elastic stream processing system.
+Journal of Parallel and Distributed Computing, Volume 192, 2024, 104940, ISSN 0743-7315. 

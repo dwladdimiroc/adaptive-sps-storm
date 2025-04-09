@@ -14,7 +14,7 @@ predictor:
 storm:
   deploy:
     duration: 22
-    script: "serverlessApp.sh"
+    script: "testingApp.sh"
     dataset: "twitterlow"
     analyze: true
   adaptive:
