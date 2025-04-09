@@ -31,7 +31,7 @@ The variable `csv` is the folder where the system saves the statistics.
 ## Requisites
 For compile this project you need `go` and `redis`, and of course, `storm`. Please refer to you platform's/OS' documentation for support.
 
-The `go` last version used was 1.2.2  (see the <a href="https://go.dev/doc/install">go installation instructions</a> for details). For `redis`, the last version used was 6.x. And `storm`, you must use the `2.x` version (see <a href="https://github.com/apache/storm/tree/2.x-branch">storm branch</a>).
+The `go` last version used was 1.2.2  (see the <a href="https://go.dev/doc/install">go installation instructions</a> for details). For `redis`, the last version used was 6.x. And `storm`, you must use the `1.x` version (see <a href="https://github.com/apache/storm/tree/1.x-branch">storm branch</a>).
 
 ## Deploy
 
