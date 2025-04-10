@@ -34,7 +34,13 @@ func PredictInput(topology *storm.Topology) {
 	}
 
 	//log.Printf("[t=X] predict input : init prediction")
-	resultsPrediction := GetPrediction(samples, viper.GetInt("storm.adaptive.prediction_number"), predictions.NameModel)
+	var resultsPrediction []float64
+	if viper.GetString("storm.adaptive.predictive_model") != "basic" {
+		resultsPrediction = GetPrediction(samples, viper.GetInt("storm.adaptive.prediction_number"), predictions.NameModel)
+	} else {
+		resultsPrediction = Simple(topology)
+	}
+
 	if len(resultsPrediction) > 0 {
 		predictions.PredictedInput = append(predictions.PredictedInput, resultsPrediction...)
 	}
