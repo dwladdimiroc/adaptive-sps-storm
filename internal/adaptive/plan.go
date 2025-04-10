@@ -3,6 +3,7 @@ package adaptive
 import (
 	"github.com/dwladdimiroc/sps-storm/internal/storm"
 	"github.com/spf13/viper"
+	"log"
 )
 
 func planning(topology *storm.Topology) {
@@ -16,8 +17,8 @@ func planning(topology *storm.Topology) {
 				topology.Bolts[i].Replicas = topology.Bolts[i].PredictionReplicas
 			}
 		}
-		//log.Printf("planning: ok\n")
-		//log.Printf("planning: bolt={%s},replicas={%d}\n", topology.Bolts[i].Name, topology.Bolts[i].Replicas)
+		log.Printf("planning: ok\n")
+		log.Printf("planning: bolt={%s},replicas={%d}\n", topology.Bolts[i].Name, topology.Bolts[i].Replicas)
 	}
 	execute(*topology)
 }

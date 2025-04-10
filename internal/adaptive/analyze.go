@@ -13,14 +13,14 @@ func analyze(topology *storm.Topology) {
 	//log.Printf("analyze: period %v\n", period)
 	if period%viper.GetInt("storm.adaptive.analyze_samples") == 0 {
 		log.Printf("[t=%d] analyze: prediction\n", period)
-		// Safe prediction, if the prediction is not ready before the next analyze
+		// Safe prediction - This function adds the p next input rate according the simple prediction
 		simplesPrediction := predictive.Simple(topology)
-		//log.Printf("[t=%d] analyze: predictedInput={%d},simplesPrediction={%d}", period, len(topology.PredictedInputRate), len(simplesPrediction))
 		for i := 0; i < len(simplesPrediction); i++ {
 			topology.PredictedInputRate = append(topology.PredictedInputRate, int64(simplesPrediction[i]))
 		}
 
 		predictive.PredictInput(topology)
+
 		for i := range topology.Bolts {
 			topology.Bolts[i].PredictionQueue = predictionInputQueue(topology.Bolts[i], *topology) / viper.GetInt64("storm.adaptive.analyze_samples")
 		}

@@ -72,7 +72,7 @@ func updateStatsInputStream(topology *storm.Topology, metrics storm.TopologyMetr
 			topology.InputRate = append(topology.InputRate, topology.InputRate[len(topology.InputRate)-1])
 		}
 	}
-	//log.Printf("[monitor] period={%d},inputRate={%d}", period, inputRate)
+	//log.Printf("[monitor] period={%d},inputRate={%d}", period, topology.InputRate[len(topology.InputRate)-1])
 }
 
 func updateLatency(topology *storm.Topology) {
