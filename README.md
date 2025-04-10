@@ -1,5 +1,5 @@
 # Self-adaptive in Apache Storm
-This version is under development. It is an extension of the 3.1 branch, adding the functionality to select the best predictor based on a reinforcement learning model. Although a first version was used, there are still improvements.
+This version is under development. It is an extension of the v3.1 branch, adding the functionality to select the best predictor based on a reinforcement learning model. Although a first version was used, there are still improvements.
 Implementation of MAPE Model for Storm (2.8.0) extension. This project presents the self-adaptive system for to modify the number of active/inactive replicas for each pool of operators in the SPS application. The goal is to analyse differences metrics (i.e. input, executed time, queue) and to plan the changes necessary for to process all input events in the SPS.   
 
 ## Configuration
