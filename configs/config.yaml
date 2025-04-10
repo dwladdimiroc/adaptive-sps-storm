@@ -15,13 +15,13 @@ storm:
   deploy:
     duration: 22
     script: "testingApp.sh"
-    dataset: "twitterlow"
+    dataset: "constant2"
     analyze: true
   adaptive:
     time_window_size: 1
     benchmark_samples: 60
     analyze_samples: 15
-    predictive_model: "ann"
+    predictive_model: "basic"
     prediction_samples: 30
     prediction_number: 15
     planning_samples: 5
@@ -29,7 +29,3 @@ storm:
   rest_metric:
     port: 3000
   csv: "stats/"
-
-gcp:
-  auth_credential: "~/.config/gcloud/application_default_credentials.json"
-  project: "sps-storm"
