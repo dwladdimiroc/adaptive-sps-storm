@@ -9,7 +9,11 @@ def fft_prediction(samples, prediction_number):
     fft = FFT(trend="poly")
     fft.fit(timeseries)
 
+    #print(fft)
+    #print(timeseries)
+
     data = fft.predict(prediction_number)
+    #print(data)
     predictions = []
     for i in range(len(data.values())):
         predictions.append(data.values()[i][0])

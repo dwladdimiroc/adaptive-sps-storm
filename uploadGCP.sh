@@ -1,3 +1,3 @@
-echo 'upload branch adaptive storm v3.0'
+echo 'upload branch adaptive storm dev'
 go build
-gcloud compute scp sps-storm sps-storm-central:~/sps-storm
+gcloud compute scp sps-storm sps-storm-nimbus:~/sps-storm

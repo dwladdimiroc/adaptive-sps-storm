@@ -4,47 +4,50 @@ import (
 	"github.com/dwladdimiroc/sps-storm/internal/predictive"
 	"github.com/dwladdimiroc/sps-storm/internal/storm"
 	"github.com/dwladdimiroc/sps-storm/internal/util"
-	"github.com/montanaflynn/stats"
 	"github.com/spf13/viper"
 	"log"
 	"math"
 )
 
 func analyze(topology *storm.Topology) {
-	log.Printf("analyze: period %v\n", period)
-	predictedInput := getInput(topology)
+	//log.Printf("analyze: period %v\n", period)
+	if period%viper.GetInt("storm.adaptive.analyze_samples") == 0 {
+		log.Printf("[t=%d] analyze: prediction\n", period)
+		// Safe prediction - This function adds the p next input rate according the simple prediction
+		simplesPrediction := predictive.Simple(topology)
+		for i := 0; i < len(simplesPrediction); i++ {
+			topology.PredictedInputRate = append(topology.PredictedInputRate, int64(simplesPrediction[i]))
+		}
+
+		predictive.PredictInput(topology)
+
+		for i := range topology.Bolts {
+			topology.Bolts[i].PredictionQueue = predictionInputQueue(topology.Bolts[i], *topology) / viper.GetInt64("storm.adaptive.analyze_samples")
+		}
+
+		topology.ClearQueue()
+
+		//log.Printf("[t=%d] analyze: predictedModel={%s},predictedInput={%d},topologyInput={%d}", period, predictive.GetPred().NameModel, len(predictive.GetPred().PredictedInput), len(topology.PredictedInputRate))
+		init := len(predictive.GetPred().PredictedInput) - viper.GetInt("storm.adaptive.prediction_number")
+		for i := init; i < len(predictive.GetPred().PredictedInput); i++ {
+			topology.PredictedInputRate[i] = int64(predictive.GetPred().PredictedInput[i])
+		}
+	}
+
 	//log.Printf("input predicted: %d\n", input)
-	for i := range topology.Bolts {
-		predictedInput += predictionInputQueue(topology.Bolts[i], *topology) / viper.GetInt64("storm.adaptive.prediction_number")
-		topology.Bolts[i].PredictionReplicas = predictionReplicas(predictedInput, topology.Bolts[i])
-		log.Printf("analyze: bolt={%s},predictionInput={%d},predictionReplicas={%d}", topology.Bolts[i].Name, predictedInput, topology.Bolts[i].PredictionReplicas)
-	}
-}
-
-func getInput(topology *storm.Topology) int64 {
-	var samplesPrediction []float64
-	if topology.PredictedInputRate == nil {
-		topology.PredictedInputRate = make([]int64, len(topology.InputRate))
-	}
-
-	if viper.GetString("storm.adaptive.predictive_model") == "basic" {
-		//log.Printf("analyse: prediction_input: basic\n")
-		samplesPrediction = predictive.Simple(topology)
-	} else {
-		//log.Printf("analyse: prediction_input: %s\n", viper.GetString("storm.adaptive.predictive_model"))
-		samplesPrediction = predictive.PredictionInput(topology)
-	}
-
-	for i := 0; i < len(samplesPrediction); i++ {
-		topology.PredictedInputRate = append(topology.PredictedInputRate, int64(samplesPrediction[i]))
-	}
-
-	if input, err := stats.Mean(samplesPrediction); err != nil {
-		log.Printf("error mean input: %v\n", err)
-		return 0
-	} else {
-		//log.Printf("analyze: prediction_input: {%s}, samples ={%v}, prediction input={%v}\n", viper.GetString("storm.adaptive.predictive_model"), samplesPrediction, int64(math.Ceil(input)))
-		return int64(math.Ceil(input))
+	if period >= viper.GetInt("storm.adaptive.analyze_samples") && period%viper.GetInt("storm.adaptive.planning_samples") == 0 {
+		log.Printf("[t=%d] analyze: determinate replicas\n", period)
+		for i := range topology.Bolts {
+			var predictedInput int64
+			for j := 0; j < viper.GetInt("storm.adaptive.planning_samples"); j++ {
+				predictedInput += predictive.GetPredictedInputPeriod(period + j)
+			}
+			predictedInput /= viper.GetInt64("storm.adaptive.planning_samples")
+			predictedInput += topology.Bolts[i].PredictionQueue
+			topology.Bolts[i].PredictionReplicas = predictionReplicas(predictedInput, topology.Bolts[i])
+			//log.Printf("[t=%d] analyze: bolt={%s},predictionInput={%d},predictionReplicas={%d}", period, topology.Bolts[i].Name, predictedInput, topology.Bolts[i].PredictionReplicas)
+		}
+		planning(topology)
 	}
 }
 

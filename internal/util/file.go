@@ -1,9 +1,8 @@
 package util
 
 import (
-	//		"fmt"
 	"bytes"
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -16,7 +15,7 @@ func check(e error) {
 
 func writeFile(data []byte, filename string) {
 	folder := "stats/"
-	errWrite := ioutil.WriteFile(folder+filename, data, 0644)
+	errWrite := os.WriteFile(folder+filename, data, 0644)
 	check(errWrite)
 }
 

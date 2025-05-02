@@ -10,9 +10,10 @@ import (
 func execute(topology storm.Topology) {
 	if err := updateReplicas(topology); err != nil {
 		log.Printf("execute: rebalanced topology {%v}\n", err)
-	} else {
-		log.Printf("execute: rebalanced topology {ok}\n")
 	}
+	//else {
+	//	log.Printf("execute: rebalanced topology {ok}\n")
+	//}
 }
 
 func updateReplicas(topology storm.Topology) error {
