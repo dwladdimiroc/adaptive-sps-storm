@@ -25,6 +25,7 @@ storm:
     prediction_samples: 30
     prediction_number: 15
     selector_model: "bandit-ucb"
+    saved_resources_metric: 32
     planning_samples: 5
     limit_replicas: 25
   rest_metric:
