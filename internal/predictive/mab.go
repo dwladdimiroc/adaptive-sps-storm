@@ -34,21 +34,19 @@ type RewardNormBounds struct {
 
 type BanditSelectorConfig struct {
 	Algorithm       Algorithm
-	Epsilon         float64 // ε para ε-greedy
-	C               float64 // c de UCB
-	Alpha           float64 // paso EMA (si UseAlpha=true)
-	Gamma           float64 // descuento (si UseAlpha=false)
-	UseAlpha        bool
-	CooldownWindows int           // #ventanas mínimas antes de cambiar modelo
-	DecisionPeriod  time.Duration // duración de la ventana de decisión
-	TopK            int           // para gating (opcional)
-	Weights         RewardWeights
+	Epsilon         float64       // ε parameter for ε-greedy
+	C               float64       // c parameter for UCB
+	Alpha           float64       // EMA step size (used if UseAlpha = true)
+	Gamma           float64       // Discount factor (used if UseAlpha = false)
+	UseAlpha        bool          // Whether to use EMA (true) or discounted update (false)
+	CooldownWindows int           // Minimum number of windows before switching models
+	DecisionPeriod  time.Duration // Duration of each decision window
+	TopK            int           // Used for gating (optional)
+	Weights         RewardWeights // Weight coefficients for each reward signal
 	NormBounds      RewardNormBounds
 	RandomSeed      int64
-	ColdStartRound  bool // probar cada modelo al menos una vez
+	ColdStartRound  bool // Try each model at least once before learning begins
 }
-
-/*** ===================== Estado GLOBAL ===================== ***/
 
 type pendingDecision struct {
 	DecisionID    string
@@ -61,26 +59,25 @@ type GlobalBanditState struct {
 	Config BanditSelectorConfig
 	Models []string
 
-	// Estado del bandit (Q/N/T)
+	// Bandit internal state (Q-values, counts, total rounds)
 	Q map[string]float64
 	N map[string]int64
 	T int64
 
-	// Decisiones pendientes (crédito diferido)
+	// Pending decisions (for delayed credit assignment)
 	Pending map[string]pendingDecision
 
-	// Última decisión (para cooldown)
+	// Last decision (used for cooldown logic)
 	LastDecision pendingDecision
 	HasLast      bool
 
-	// RNG
+	// Random number generator
 	rng *rand.Rand
 }
 
 var Bandit GlobalBanditState
 
-/*** ===================== Inicialización ===================== ***/
-
+// InitBandit initializes the global bandit state with the given models and configuration.
 func InitBandit(models []string, cfg BanditSelectorConfig) {
 	Bandit = GlobalBanditState{
 		Config:  cfg,
@@ -98,6 +95,7 @@ func InitBandit(models []string, cfg BanditSelectorConfig) {
 	}
 }
 
+// ifZeroSeed returns the given seed or generates one from the current time if seed == 0.
 func ifZeroSeed(s int64) int64 {
 	if s == 0 {
 		return time.Now().UnixNano()
@@ -105,8 +103,7 @@ func ifZeroSeed(s int64) int64 {
 	return s
 }
 
-/*** ===================== Helpers ===================== ***/
-
+// clamp01 clamps a value into the [0, 1] range.
 func clamp01(x float64) float64 {
 	if x < 0 {
 		return 0
@@ -116,19 +113,22 @@ func clamp01(x float64) float64 {
 	}
 	return x
 }
+
+// norm01 normalizes a value to [0,1] based on the given bounds.
 func norm01(x float64, b Bounds) float64 {
 	if b.Max <= b.Min {
 		return 0
 	}
 	return (x - b.Min) / (b.Max - b.Min)
 }
+
+// decisionID returns a unique decision identifier based on current timestamp.
 func decisionID(now time.Time) string { return fmt.Sprintf("dec_%d", now.UnixNano()) }
 
-/*** ===================== API (llamar desde MAPE) ===================== ***/
-
-// ChooseArm selecciona el modelo para la ventana actual y devuelve (decisionID, model).
+// ChooseArm selects a model for the current decision window.
+// Returns (decisionID, chosenModel).
 func ChooseArm(now time.Time) (string, string) {
-	// Cooldown: reusar modelo si todavía no expira
+	// --- Cooldown phase: reuse the previous model if cooldown is still active ---
 	if Bandit.HasLast && now.Before(Bandit.LastDecision.CooldownUntil) {
 		decID := decisionID(now)
 		p := pendingDecision{
@@ -141,7 +141,7 @@ func ChooseArm(now time.Time) (string, string) {
 		return decID, p.ChosenModel
 	}
 
-	// Cold-start: probar modelos no vistos primero
+	// --- Cold-start phase: try unseen models first ---
 	if Bandit.Config.ColdStartRound {
 		for _, m := range Bandit.Models {
 			if Bandit.N[m] == 0 {
@@ -157,7 +157,7 @@ func ChooseArm(now time.Time) (string, string) {
 		}
 	}
 
-	// Selección
+	// --- Model selection ---
 	var chosen string
 	switch Bandit.Config.Algorithm {
 	case AlgoUCB:
@@ -176,8 +176,10 @@ func ChooseArm(now time.Time) (string, string) {
 	case AlgoEpsilon:
 		Bandit.T++
 		if Bandit.rng.Float64() < Bandit.Config.Epsilon {
+			// Exploration
 			chosen = Bandit.Models[Bandit.rng.Intn(len(Bandit.Models))]
 		} else {
+			// Exploitation
 			best := math.Inf(-1)
 			for _, m := range Bandit.Models {
 				if Bandit.Q[m] > best {
@@ -190,7 +192,7 @@ func ChooseArm(now time.Time) (string, string) {
 		panic("unknown algorithm")
 	}
 
-	// Registrar pendiente y cooldown
+	// --- Register pending decision and apply cooldown ---
 	decID := decisionID(now)
 	cd := now.Add(time.Duration(Bandit.Config.CooldownWindows) * Bandit.Config.DecisionPeriod)
 	p := pendingDecision{DecisionID: decID, ChosenModel: chosen, MadeAt: now, CooldownUntil: cd}
@@ -200,10 +202,10 @@ func ChooseArm(now time.Time) (string, string) {
 	return decID, chosen
 }
 
-// UpdateOutcome aplica el crédito diferido con tus 3 señales:
-// - latencyMs (ms, menor es mejor)
-// - degrade (0..1, menor es mejor)
-// - saving  (0..1, mayor es mejor)
+// UpdateOutcome applies delayed credit assignment based on three metrics:
+// - latencyMs: request latency in milliseconds (lower is better)
+// - degrade: throughput degradation ratio [0..1] (lower is better)
+// - saving: resource savings ratio [0..1] (higher is better)
 func UpdateOutcome(decisionID string, latencyMs, degrade, saving float64) {
 	p, ok := Bandit.Pending[decisionID]
 	if !ok {
@@ -211,30 +213,21 @@ func UpdateOutcome(decisionID string, latencyMs, degrade, saving float64) {
 	}
 	delete(Bandit.Pending, decisionID)
 
-	if degrade < 0 {
-		degrade = 0
-	}
-	if degrade > 1 {
-		degrade = 1
-	}
-	if saving < 0 {
-		saving = 0
-	}
-	if saving > 1 {
-		saving = 1
-	}
+	// Sanitize input values
+	degrade = clamp01(degrade)
+	saving = clamp01(saving)
 
-	// Normalización (a [0,1])
+	// Normalize to [0,1]
 	latN := clamp01(norm01(latencyMs, Bandit.Config.NormBounds.Latency))
 	degN := clamp01(norm01(degrade, Bandit.Config.NormBounds.Degrade))
 	savN := clamp01(norm01(saving, Bandit.Config.NormBounds.Saving))
 
-	// Reward de control
+	// Compute overall reward
 	r := Bandit.Config.Weights.WLatency*(1.0-latN) +
 		Bandit.Config.Weights.WDegrade*(1.0-degN) +
 		Bandit.Config.Weights.WSaving*(savN)
 
-	// Actualización EMA (Alpha) o descuento (Gamma)
+	// Update Q-value using EMA (Alpha) or discounted (Gamma) update
 	m := p.ChosenModel
 	oldQ := Bandit.Q[m]
 	var newQ float64
@@ -255,7 +248,8 @@ func UpdateOutcome(decisionID string, latencyMs, degrade, saving float64) {
 	Bandit.N[m] = Bandit.N[m] + 1
 }
 
-// RankTopK: devuelve los top-k por score actual (UCB: Q+bonus; ε-greedy: Q)
+// RankTopK returns the top-k models based on their current scores.
+// For UCB, score = Q + bonus; for ε-greedy, score = Q.
 func RankTopK(k int) []string {
 	type pair struct {
 		M string
@@ -288,13 +282,14 @@ func RankTopK(k int) []string {
 	return out
 }
 
+// BanditDefaultConfig returns a default configuration for the bandit.
 func BanditDefaultConfig() BanditSelectorConfig {
 	return BanditSelectorConfig{
-		Algorithm:       AlgoUCB, // o AlgoEpsilon
-		Epsilon:         0.1,     // si usas ε-greedy
-		C:               2.0,     // UCB bonus
-		Alpha:           0.1,     // EMA (si UseAlpha=true)
-		Gamma:           0.98,    // descuento (si UseAlpha=false)
+		Algorithm:       AlgoUCB, // or AlgoEpsilon
+		Epsilon:         0.1,     // exploration rate (ε-greedy)
+		C:               2.0,     // UCB exploration bonus coefficient
+		Alpha:           0.1,     // EMA step (if UseAlpha = true)
+		Gamma:           0.98,    // discount factor (if UseAlpha = false)
 		UseAlpha:        true,
 		CooldownWindows: 2,
 		DecisionPeriod:  5 * time.Second,
@@ -303,8 +298,8 @@ func BanditDefaultConfig() BanditSelectorConfig {
 			WLatency: 0.34, WDegrade: 0.33, WSaving: 0.33,
 		},
 		NormBounds: RewardNormBounds{
-			Latency: Bounds{Min: 50, Max: 500},   // ajusta a tu app
-			Degrade: Bounds{Min: 0.0, Max: 0.25}, // SLA 10% (recomendado)
+			Latency: Bounds{Min: 50, Max: 500},   // adjust based on your app
+			Degrade: Bounds{Min: 0.0, Max: 0.25}, // recommended SLA 10%
 			Saving:  Bounds{Min: 0.0, Max: 0.50},
 		},
 		RandomSeed:     42,
@@ -320,8 +315,11 @@ type StatsBandit struct {
 
 var samplesBandit StatsBandit
 
+// UpdateBandit collects raw metric samples from the Storm topology.
 func UpdateBandit(topology storm.Topology) {
 	maxSavedResources := viper.GetInt64("storm.adaptive.saved_resources_metric")
+
+	// Compute normalized resource savings
 	var totalReplicas int64 = 0
 	for _, bolt := range topology.Bolts {
 		totalReplicas += bolt.Replicas
@@ -329,6 +327,7 @@ func UpdateBandit(topology storm.Topology) {
 	savedResourcesS := float64(totalReplicas) / float64(maxSavedResources)
 	samplesBandit.SavedResources = append(samplesBandit.SavedResources, savedResourcesS)
 
+	// Compute throughput degradation
 	var output int64
 	for _, bolt := range topology.Bolts {
 		if bolt.Name == "Latency" {
@@ -341,12 +340,13 @@ func UpdateBandit(topology storm.Topology) {
 	} else {
 		throughputDegradationS = math.Abs(float64(topology.InputRateT)-float64(output)) / float64(topology.InputRateT)
 	}
-
 	samplesBandit.ThroughputDegradation = append(samplesBandit.ThroughputDegradation, throughputDegradationS)
 
+	// Record latency
 	samplesBandit.Latency = append(samplesBandit.Latency, topology.Latency)
 }
 
+// UpdateStatsBandit aggregates collected samples and updates the bandit outcome.
 func UpdateStatsBandit(decId string) {
 	var savedResources float64
 	for _, sample := range samplesBandit.SavedResources {
@@ -367,14 +367,11 @@ func UpdateStatsBandit(decId string) {
 	latency /= float64(len(samplesBandit.Latency))
 
 	UpdateOutcome(decId,
-		/*latencyMs*/ latency,
-		/*throughputDegradation*/ throughputDegradation,
-		/*savedResources*/ savedResources)
+		/* latencyMs */ latency,
+		/* throughputDegradation */ throughputDegradation,
+		/* savedResources */ savedResources)
 
-	//log.Printf("[t=X] update bandit: savedResources={%.2f}", savedResources)
-	//log.Printf("[t=X] update bandit: throughputDegradation={%.2f}", throughputDegradation)
-	//log.Printf("[t=X] update bandit: latency={%.2f}", latency)
-
+	// Reset collected samples
 	samplesBandit.SavedResources = []float64{}
 	samplesBandit.ThroughputDegradation = []float64{}
 	samplesBandit.Latency = []float64{}
