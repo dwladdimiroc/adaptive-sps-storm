@@ -1,12 +1,13 @@
 package adaptive
 
 import (
+	"log"
+	"strconv"
+
 	"github.com/dwladdimiroc/sps-storm/internal/predictive"
 	"github.com/dwladdimiroc/sps-storm/internal/storm"
 	"github.com/dwladdimiroc/sps-storm/internal/util"
 	"github.com/spf13/viper"
-	"log"
-	"strconv"
 )
 
 func monitor(topology *storm.Topology) bool {
@@ -30,6 +31,7 @@ func updateTopology(topology *storm.Topology, metrics storm.TopologyMetrics) {
 	updateStatsBolt(topology, metrics)
 	updateLatency(topology)
 	updatePredictedInput(topology)
+	predictive.UpdateBandit(*topology)
 }
 
 func updateStatsInputStream(topology *storm.Topology, metrics storm.TopologyMetrics) {

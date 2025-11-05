@@ -1,3 +1,3 @@
-echo 'upload branch adaptive storm serverless'
+echo 'upload branch adaptive storm dev'
 go build
-gcloud compute scp sps-storm sps-adaptation:~/sps-storm
+gcloud compute scp sps-storm storm-node-central:~/sps-storm
