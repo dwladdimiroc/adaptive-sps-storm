@@ -1,12 +1,13 @@
 package adaptive
 
 import (
+	"log"
+	"math"
+
 	"github.com/dwladdimiroc/sps-storm/internal/predictive"
 	"github.com/dwladdimiroc/sps-storm/internal/storm"
 	"github.com/dwladdimiroc/sps-storm/internal/util"
 	"github.com/spf13/viper"
-	"log"
-	"math"
 )
 
 func analyze(topology *storm.Topology) {
@@ -27,6 +28,7 @@ func analyze(topology *storm.Topology) {
 
 		//log.Printf("[t=%d] analyze: determinate predictor={%d}\n]", period, period%(viper.GetInt("storm.adaptive.analyze_samples")+viper.GetInt("storm.adaptive.prediction_number")))
 		if period%(viper.GetInt("storm.adaptive.analyze_samples")+viper.GetInt("storm.adaptive.prediction_number")) == 0 {
+			log.Printf("[t=%d] analyze: determinate predictor\n", period)
 			predictive.DeterminatePredictor(topology)
 		}
 
