@@ -1,13 +1,18 @@
 package predictive
 
 import (
-	"github.com/dwladdimiroc/sps-storm/internal/storm"
-	"github.com/spf13/viper"
 	"log"
 	"math"
 	"math/rand"
 	"sync"
+	"time"
+
+	"github.com/dwladdimiroc/sps-storm/internal/storm"
+	"github.com/spf13/viper"
 )
+
+var banditStart = false
+var decId string
 
 var indexChosenPredictor int
 var predictions []PredictionInput
@@ -68,6 +73,14 @@ func InitPrediction() {
 	sgd.NameModel = "sgd"
 	sgd.PredictedInput = make([]float64, viper.GetInt("storm.adaptive.analyze_samples"))
 	predictions = append(predictions, sgd)
+
+	//Init Bandit
+	cfg := BanditDefaultConfig() // o arma el tuyo
+	var nameModels []string
+	for i := 0; i < len(predictions); i++ {
+		nameModels = append(nameModels, predictions[i].NameModel)
+	}
+	InitBandit(nameModels, cfg)
 
 	if viper.GetString("storm.adaptive.predictive_model") != "multi" {
 		for i := 0; i < len(predictions); i++ {
@@ -144,6 +157,20 @@ func DeterminatePredictor(topology *storm.Topology) {
 				}
 			}
 			indexChosenPredictor = indexPredictor
+		} else if selectorModel == "bandit" {
+			if banditStart {
+				UpdateStatsBandit(decId)
+			}
+			var modelName string
+			decId, modelName = ChooseArm(time.Now())
+			log.Printf("[t=X] bandit: modelName={%v},decId={%v}", modelName, decId)
+			for i, prediction := range predictions {
+				if modelName == prediction.NameModel {
+					indexChosenPredictor = i
+				}
+			}
+			//log.Printf("[t=X] bandit: model={%s},index={%d}", predictions[indexChosenPredictor], indexChosenPredictor)
+			banditStart = true
 		} else if selectorModel == "bandit-greedy" {
 			value := rand.Float64()
 			if viper.GetString("storm.deploy.dataset") == "sbac" {
