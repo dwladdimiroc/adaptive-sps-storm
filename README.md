@@ -1,5 +1,5 @@
 # Self-adaptive in Apache Storm
-This work presents a new version of the MAPE model implementation for the Storm (version 2.8.0) extension, updating and improving upon the version described in [1]. In this project, we introduce a self-adaptive system designed to dynamically adjust the number of active/inactive replicas for each operator pool in the SPS application, now leveraging the latest version of Apache Storm. The system analyzes key metrics (e.g., input rate, execution time, queue length) and plans the necessary adjustments to ensure that all incoming events in the SPS are efficiently processed.
+This work presents a new version of the MAPE model implementation for the Storm (version 2.8.0) extension, updating and improving upon the version described in [[1]](#1). In this project, we introduce a self-adaptive system designed to dynamically adjust the number of active/inactive replicas for each operator pool in the SPS application, now leveraging the latest version of Apache Storm. The system analyzes key metrics (e.g., input rate, execution time, queue length) and plans the necessary adjustments to ensure that all incoming events in the SPS are efficiently processed.
 
 ## Configuration
 The config file '[config.yaml](configs/config.yaml)' has three principals parameters: `nimbus`, `redis`, `storm`. 
