@@ -75,12 +75,14 @@ func InitPrediction() {
 	predictions = append(predictions, sgd)
 
 	//Init Bandit
-	cfg := BanditDefaultConfig() // o arma el tuyo
-	var nameModels []string
-	for i := 0; i < len(predictions); i++ {
-		nameModels = append(nameModels, predictions[i].NameModel)
+	if viper.GetString("storm.adaptive.selector_model") == "bandit" {
+		cfg := BanditDefaultConfig() // o arma el tuyo
+		var nameModels []string
+		for i := 0; i < len(predictions); i++ {
+			nameModels = append(nameModels, predictions[i].NameModel)
+		}
+		InitBandit(nameModels, cfg)
 	}
-	InitBandit(nameModels, cfg)
 
 	if viper.GetString("storm.adaptive.predictive_model") != "multi" {
 		for i := 0; i < len(predictions); i++ {

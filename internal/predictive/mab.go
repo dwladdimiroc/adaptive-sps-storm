@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"sort"
 	"time"
 
 	"github.com/dwladdimiroc/sps-storm/internal/storm"
@@ -263,39 +262,6 @@ func UpdateOutcome(decisionID string, latencyMs, degrade, saving float64) {
 		Bandit.HasOpen = false
 		Bandit.CurrentOpenID = ""
 	}
-}
-
-// RankTopK: returns the top-k by current score (UCB: Q+bonus; ε-greedy: Q)
-func RankTopK(k int) []string {
-	type pair struct {
-		M string
-		S float64
-	}
-	scores := make([]pair, 0, len(Bandit.Models))
-	switch Bandit.Config.Algorithm {
-	case AlgoUCB:
-		t := math.Max(1, float64(Bandit.T))
-		for _, m := range Bandit.Models {
-			q := Bandit.Q[m]
-			n := float64(Bandit.N[m])
-			bonus := Bandit.Config.C * math.Sqrt(math.Log(t)/(n+1.0))
-			scores = append(scores, pair{M: m, S: q + bonus})
-		}
-	case AlgoEpsilon:
-		for _, m := range Bandit.Models {
-			q := Bandit.Q[m]
-			scores = append(scores, pair{M: m, S: q})
-		}
-	}
-	sort.Slice(scores, func(i, j int) bool { return scores[i].S > scores[j].S })
-	if k > len(scores) {
-		k = len(scores)
-	}
-	out := make([]string, 0, k)
-	for i := 0; i < k; i++ {
-		out = append(out, scores[i].M)
-	}
-	return out
 }
 
 /*** ===================== Default Config ===================== ***/

@@ -31,7 +31,9 @@ func updateTopology(topology *storm.Topology, metrics storm.TopologyMetrics) {
 	updateStatsBolt(topology, metrics)
 	updateLatency(topology)
 	updatePredictedInput(topology)
-	predictive.UpdateBandit(*topology)
+	if viper.GetString("storm.adaptive.selector_model") == "bandit" {
+		predictive.UpdateBandit(*topology)
+	}
 }
 
 func updateStatsInputStream(topology *storm.Topology, metrics storm.TopologyMetrics) {
