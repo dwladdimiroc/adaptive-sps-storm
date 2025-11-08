@@ -39,8 +39,3 @@ The `go` last version used was 1.23.0  (see the <a href="https://go.dev/doc/inst
 ## Deploy
 Before starting the application, it is necessary to deploy `storm`, run `redis` and the REST app (Flask) from the `py` folder.
 The main file is `initSps.sh` which is responsible for run the monitor. If the machine has no Golang installed, so you should comment line 4 `go build`, because this linea compile again the Go project. It's mandatory create the `\stats` folder in the project. And the `scripts` folder has Storm applications that the system can use. Each script is the commands for deploy Storm app, so you must change the Storm directory is necessary.
-
-## References
-<a id="1" href="https://www.sciencedirect.com/science/article/pii/S0743731524001047">[1]</a>
-Daniel Wladdimiro, Nicolas Hidalgo, Luciana Arantes, Pierre Sens. PA-SPS: A predictive adaptive approach for an elastic stream processing system.
-Journal of Parallel and Distributed Computing, Volume 192, 2024, 104940, ISSN 0743-7315. 
