@@ -3,7 +3,6 @@ package predictive
 import (
 	"github.com/dwladdimiroc/sps-storm/internal/storm"
 	"github.com/spf13/viper"
-	"log"
 )
 
 func Simple(topology *storm.Topology) []float64 {
