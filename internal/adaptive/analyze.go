@@ -54,6 +54,7 @@ func analyze(topology *storm.Topology) {
 			topology.Bolts[i].PredictionReplicas = predictionReplicas(predictedInput, topology.Bolts[i])
 			//log.Printf("[t=%d] analyze: bolt={%s},predictionInput={%d},predictionReplicas={%d}", period, topology.Bolts[i].Name, predictedInput, topology.Bolts[i].PredictionReplicas)
 		}
+
 		planning(topology)
 	}
 }
