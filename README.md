@@ -25,7 +25,7 @@ The variable `adaptive` is related to self-adaptive system.
 - `preditive_model` model used by input prediction. it's possible variables: `basic`, `linear_regression`, `fft`, `ann`, `random_forest`, `svg`, `svm`, `ridge`, `bayesian`, `multi`
 - `prediction_samples`  number of samples used by predictive model
 - `prediction_number`  number of predictions made by predictive model
-- `selector_model`: model used by selection. `rmse`, `bandit-greedy`, `bandit-ucb`.
+- `selector_model`: model used by selection. `rmse`, `bandit-greedy`, `bandit-ucb`, `bandit`.
 - `planning_samples`: numbers of samples used by planning
 - `limit_repicas`  limit of number of pool replicas
 
@@ -39,3 +39,6 @@ The `go` last version used was 1.2.1  (see the <a href="https://go.dev/doc/insta
 ## Deploy
 Before starting the application, it is necessary to deploy `storm`, run `redis` and the REST app (Flask) from the `py` folder.
 The main file is `initSps.sh` which is responsible for run the monitor. If the machine has no Golang installed, so you should comment line 4 `go build`, because this linea compile again the Go project. It's mandatory create the `\stats` folder in the project. And the `scripts` folder has Storm applications that the system can use. Each script is the commands for deploy Storm app, so you must change the Storm directory is necessary.
+
+## References
+<a id="1">[1]</a> Daniel Wladdimiro, Nicolás Hidalgo, Alessio Pagliari, Luciana Arantes, Pierre Sens, Erika Rosas, Victor Reyes. A Multi-Model Predictive Framework for Adaptive Resource Management in Stream Processing Systems. Future Generation Computer Systems, (In Review). 
