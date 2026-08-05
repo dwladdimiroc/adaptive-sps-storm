@@ -1,5 +1,5 @@
 # Self-adaptive in Apache Storm
-This version is under development. It is an extension of the v3.1 branch, adding the functionality to select the best predictor based on a reinforcement learning model. Although a first version was used, there are still improvements.
+This version was described in [[1]](#1). It is an extension of the v3.1 branch, adding the functionality to select the best predictor based on a reinforcement learning model. Although a first version was used, there are still improvements.
 Implementation of MAPE Model for Storm (2.8.0) extension. This project presents the self-adaptive system for to modify the number of active/inactive replicas for each pool of operators in the SPS application. The goal is to analyse differences metrics (i.e. input, executed time, queue) and to plan the changes necessary for to process all input events in the SPS.   
 
 ## Configuration
@@ -41,4 +41,4 @@ Before starting the application, it is necessary to deploy `storm`, run `redis` 
 The main file is `initSps.sh` which is responsible for run the monitor. If the machine has no Golang installed, so you should comment line 4 `go build`, because this linea compile again the Go project. It's mandatory create the `\stats` folder in the project. And the `scripts` folder has Storm applications that the system can use. Each script is the commands for deploy Storm app, so you must change the Storm directory is necessary.
 
 ## References
-<a id="1">[1]</a> Daniel Wladdimiro, Nicolás Hidalgo, Alessio Pagliari, Luciana Arantes, Pierre Sens, Erika Rosas, Victor Reyes. A Multi-Model Predictive Framework for Adaptive Resource Management in Stream Processing Systems. Future Generation Computer Systems, (In Review). 
+<a id="1">[1]</a> Daniel Wladdimiro, Nicolás Hidalgo, Alessio Pagliari, Luciana Arantes, Pierre Sens, Erika Rosas, Victor Reyes. A Multi-Model Predictive Framework for Adaptive Resource Management in Stream Processing Systems. Future Generation Computer Systems, 2026.
